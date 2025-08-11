@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 262 83.3% 57.8%; /* Purple #7e3af2 */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 172 92% 32.9%; /* Teal #0694a2 */
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 262 83.3% 90%; /* Light purple */
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262 83.3% 57.8%; /* Purple */
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 262 83.3% 97%; /* Very light purple */
+    --sidebar-foreground: 262 83.3% 30%;
+    --sidebar-primary: 262 83.3% 57.8%; /* Purple */
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 262 83.3% 94%;
+    --sidebar-accent-foreground: 262 83.3% 30%;
+    --sidebar-border: 262 83.3% 90%;
+    --sidebar-ring: 262 83.3% 57.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 47.4% 11.2%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 262 83.3% 57.8%; /* Purple */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 172 92% 32.9%; /* Teal */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 262 83.3% 25%; /* Dark purple */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262 83.3% 57.8%;
+
+    --sidebar-background: 222.2 47.4% 11.2%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 262 83.3% 57.8%; /* Purple */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 262 83.3% 57.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+/* Custom utility classes */
+@layer components {
+  .card-gradient-primary {
+    @apply bg-gradient-to-br from-primary/90 to-primary/70 text-white;
+  }
+
+  .card-gradient-secondary {
+    @apply bg-gradient-to-br from-secondary/90 to-secondary/70 text-white;
+  }
+
+  .card-gradient-purple {
+    @apply bg-gradient-to-br from-purple-600 to-purple-400 text-white;
+  }
+
+  .card-gradient-teal {
+    @apply bg-gradient-to-br from-teal-600 to-teal-400 text-white;
+  }
+
+  .card-gradient-blue {
+    @apply bg-gradient-to-br from-blue-600 to-blue-400 text-white;
+  }
+
+  .card-gradient-indigo {
+    @apply bg-gradient-to-br from-indigo-600 to-indigo-400 text-white;
+  }
+
+  .status-good {
+    @apply bg-green-500 text-white;
+  }
+
+  .status-progress {
+    @apply bg-yellow-500 text-white;
+  }
+
+  .status-deteriorate {
+    @apply bg-red-500 text-white;
+  }
+
+  .glass-card {
+    @apply bg-white/30 backdrop-blur-sm shadow-lg rounded-lg dark:bg-gray-800/30;
+  }
+}

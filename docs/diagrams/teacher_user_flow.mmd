@@ -1,0 +1,26 @@
+graph TD
+    A[Login Page] -->|Enter Teacher Credentials| B[Authentication]
+    B -->|Success| C[Teacher Dashboard]
+    B -->|Failure| A
+    
+    C -->|View Student List| D[My Students Page]
+    C -->|Provide Feedback| E[Feedback Page]
+    C -->|Adjust Settings| F[Settings Page]
+    
+    D -->|Select Student| G[Student Details]
+    G -->|Score Student| H[Intervention Scoring]
+    
+    H -->|Submit Scores| H1[Scores Submitted]
+    H1 -->|Back| D
+    
+    E -->|Submit Feedback| E1[Feedback Submitted]
+    E1 -->|Back| C
+    
+    F -->|Save Settings| F1[Settings Saved]
+    F1 -->|Back| C
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style C fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#dfd,stroke:#333,stroke-width:2px
+    style G fill:#ffd,stroke:#333,stroke-width:2px
+    style H fill:#ffd,stroke:#333,stroke-width:2px

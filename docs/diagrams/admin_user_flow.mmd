@@ -1,0 +1,35 @@
+graph TD
+    A[Login Page] -->|Enter Admin Credentials| B[Authentication]
+    B -->|Success| C[Admin Dashboard]
+    B -->|Failure| A
+    
+    C -->|Manage Students| D[Student Management]
+    C -->|Manage Teachers| E[Teacher Management]
+    C -->|Input Scores| F[Score Input]
+    C -->|Generate Reports| G[Reports]
+    C -->|Import Data| H[Data Import]
+    
+    D -->|Add Student| D1[Add Student Form]
+    D -->|Edit Student| D2[Edit Student Form]
+    D -->|Delete Student| D3[Confirm Delete]
+    
+    E -->|Add Teacher| E1[Add Teacher Form]
+    E -->|Edit Teacher| E2[Edit Teacher Form]
+    E -->|Delete Teacher| E3[Confirm Delete]
+    
+    F -->|Select Student| F1[Score Form]
+    F1 -->|Submit Scores| F2[Scores Saved]
+    
+    G -->|Generate Report| G1[Report View]
+    G1 -->|Export| G2[Download Report]
+    
+    H -->|Excel Import| H1[Upload Excel]
+    H1 -->|Process Data| H2[Import Results]
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style C fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#dfd,stroke:#333,stroke-width:2px
+    style E fill:#dfd,stroke:#333,stroke-width:2px
+    style F fill:#dfd,stroke:#333,stroke-width:2px
+    style G fill:#dfd,stroke:#333,stroke-width:2px
+    style H fill:#dfd,stroke:#333,stroke-width:2px

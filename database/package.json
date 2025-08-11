@@ -1,0 +1,28 @@
+{
+  "name": "pep-score-nexus-db-auditor",
+  "version": "1.0.0",
+  "description": "Database schema auditor for PEP Score Nexus Supabase database",
+  "main": "audit_schema.js",
+  "scripts": {
+    "audit": "node audit_schema.js",
+    "audit:verbose": "DEBUG=* node audit_schema.js",
+    "test-connection": "node test_connection.js",
+    "install-deps": "npm install",
+    "setup": "npm install && echo 'Dependencies installed. Please configure .env file with your Supabase credentials.'"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "dotenv": "^16.3.1"
+  },
+  "keywords": [
+    "database",
+    "audit",
+    "schema",
+    "supabase",
+    "postgresql"
+  ],
+  "author": "PEP Score Nexus Team",
+  "license": "MIT"
+}

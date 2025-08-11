@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Term Completion Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .status-upcoming { background-color: #fff3cd; }
+        .status-active { background-color: #d4edda; }
+        .status-completed { background-color: #d1ecf1; }
+        .status-archived { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>Term Completion Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Login</h2>
+        <button onclick="testLogin()">Login as Admin</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Get All Terms</h2>
+        <button onclick="getAllTerms()">Fetch All Terms</button>
+        <div id="terms-result"></div>
+        <div id="terms-table"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Term Actions</h2>
+        <p>Select a term from the table above and test actions:</p>
+        <input type="text" id="term-id" placeholder="Enter Term ID" style="width: 300px;">
+        <br><br>
+        <button onclick="activateTerm()">Activate Term</button>
+        <button onclick="completeTerm()">Complete Term</button>
+        <button onclick="archiveTerm()">Archive Term</button>
+        <div id="action-result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001/api/v1';
+        let authToken = '';
+        
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+        }
+        
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+        
+        async function testLogin() {
+            try {
+                clearLog('login-result');
+                log('login-result', 'Attempting login...', 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin1',
+                        password: 'password123'
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.data.token;
+                    log('login-result', 'Login successful!', 'success');
+                    log('login-result', `Token: ${authToken.substring(0, 50)}...`, 'info');
+                } else {
+                    log('login-result', `Login failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log('login-result', `Login error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function getAllTerms() {
+            try {
+                clearLog('terms-result');
+                log('terms-result', 'Fetching all terms...', 'info');
+                
+                if (!authToken) {
+                    log('terms-result', 'Please login first.', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/level-progression/terms`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    log('terms-result', `Found ${data.data.length} terms`, 'success');
+                    displayTermsTable(data.data);
+                } else {
+                    log('terms-result', `Failed to fetch terms: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log('terms-result', `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function displayTermsTable(terms) {
+            const tableContainer = document.getElementById('terms-table');
+            
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Term Number</th>
+                            <th>Status</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            terms.forEach(term => {
+                const statusClass = `status-${term.term_status}`;
+                tableHTML += `
+                    <tr class="${statusClass}">
+                        <td>${term.id.substring(0, 8)}...</td>
+                        <td>${term.name}</td>
+                        <td>${term.term_number}</td>
+                        <td><strong>${term.term_status.toUpperCase()}</strong></td>
+                        <td>${term.start_date}</td>
+                        <td>${term.end_date}</td>
+                        <td>
+                            <button onclick="document.getElementById('term-id').value='${term.id}'" style="padding: 5px 10px; font-size: 12px;">
+                                Select
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            tableContainer.innerHTML = tableHTML;
+        }
+        
+        async function activateTerm() {
+            await performTermAction('activate');
+        }
+        
+        async function completeTerm() {
+            await performTermAction('complete');
+        }
+        
+        async function archiveTerm() {
+            await performTermAction('archive');
+        }
+        
+        async function performTermAction(action) {
+            try {
+                clearLog('action-result');
+                const termId = document.getElementById('term-id').value;
+                
+                if (!termId) {
+                    log('action-result', 'Please enter a term ID.', 'error');
+                    return;
+                }
+                
+                if (!authToken) {
+                    log('action-result', 'Please login first.', 'error');
+                    return;
+                }
+                
+                log('action-result', `Attempting to ${action} term ${termId.substring(0, 8)}...`, 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/level-progression/terms/${termId}/${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    log('action-result', `Successfully ${action}d term!`, 'success');
+                    log('action-result', `Message: ${data.message}`, 'info');
+                    
+                    // Refresh terms table
+                    setTimeout(() => {
+                        getAllTerms();
+                    }, 1000);
+                } else {
+                    log('action-result', `Failed to ${action} term: ${data.message}`, 'error');
+                    if (data.error) {
+                        log('action-result', `Error details: ${data.error}`, 'warning');
+                    }
+                }
+            } catch (error) {
+                log('action-result', `Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Completion Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .batch-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+        }
+        .batch-header {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .batch-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .stat-item {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Batch Completion Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Login</h2>
+        <button onclick="testLogin()">Login as Admin</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Get All Batches</h2>
+        <button onclick="getAllBatches()">Fetch All Batches</button>
+        <div id="batches-result"></div>
+        <div id="batches-display"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Batch Term Completion</h2>
+        <p>Select a batch and term from above:</p>
+        <input type="text" id="batch-id" placeholder="Enter Batch ID" style="width: 300px;">
+        <input type="number" id="term-number" placeholder="Term Number" style="width: 100px;">
+        <br><br>
+        <button onclick="completeBatchTerm()">Complete Batch Term</button>
+        <div id="completion-result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001/api/v1';
+        let authToken = '';
+        let batchesData = [];
+        
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+        }
+        
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+        
+        async function testLogin() {
+            try {
+                clearLog('login-result');
+                log('login-result', 'Attempting login...', 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin1',
+                        password: 'password123'
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.data.token;
+                    log('login-result', 'Login successful!', 'success');
+                    log('login-result', `Token: ${authToken.substring(0, 50)}...`, 'info');
+                } else {
+                    log('login-result', `Login failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log('login-result', `Login error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function getAllBatches() {
+            try {
+                clearLog('batches-result');
+                log('batches-result', 'Fetching all batches...', 'info');
+                
+                if (!authToken) {
+                    log('batches-result', 'Please login first.', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/level-progression/batches`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    batchesData = data.data;
+                    log('batches-result', `Found ${batchesData.length} batches`, 'success');
+                    displayBatches(batchesData);
+                } else {
+                    log('batches-result', `Failed to fetch batches: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log('batches-result', `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function displayBatches(batches) {
+            const container = document.getElementById('batches-display');
+            
+            let html = '<h3>Batch Details:</h3>';
+            
+            batches.forEach(batch => {
+                html += `
+                    <div class="batch-card">
+                        <div class="batch-header">${batch.name} (${batch.year})</div>
+                        <div class="batch-stats">
+                            <div class="stat-item">
+                                <div><strong>ID:</strong></div>
+                                <div style="font-size: 12px;">${batch.id}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div><strong>Current Term:</strong></div>
+                                <div>${batch.current_term_number}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div><strong>Max Terms:</strong></div>
+                                <div>${batch.max_terms}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div><strong>Status:</strong></div>
+                                <div>${batch.batch_status}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div><strong>Students:</strong></div>
+                                <div>${batch.student_count}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button onclick="selectBatch('${batch.id}', ${batch.current_term_number})" 
+                                    style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px;">
+                                Select for Testing
+                            </button>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <strong>Progressions:</strong>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 5px; margin-top: 5px;">
+                                ${batch.progressions.map(p => `
+                                    <div style="background: white; padding: 5px; border-radius: 3px; text-align: center; font-size: 12px;">
+                                        Term ${p.term_number}<br>
+                                        <strong>${p.status}</strong><br>
+                                        ${p.students_enrolled} enrolled
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function selectBatch(batchId, currentTerm) {
+            document.getElementById('batch-id').value = batchId;
+            document.getElementById('term-number').value = currentTerm;
+            log('completion-result', `Selected batch ${batchId.substring(0, 8)}... for term ${currentTerm}`, 'info');
+        }
+        
+        async function completeBatchTerm() {
+            try {
+                clearLog('completion-result');
+                const batchId = document.getElementById('batch-id').value;
+                const termNumber = document.getElementById('term-number').value;
+                
+                if (!batchId || !termNumber) {
+                    log('completion-result', 'Please enter batch ID and term number.', 'error');
+                    return;
+                }
+                
+                if (!authToken) {
+                    log('completion-result', 'Please login first.', 'error');
+                    return;
+                }
+                
+                log('completion-result', `Attempting to complete term ${termNumber} for batch ${batchId.substring(0, 8)}...`, 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/level-progression/batches/${batchId}/complete-term/${termNumber}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        triggeredBy: 'admin'
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    log('completion-result', `Successfully completed term ${termNumber}!`, 'success');
+                    log('completion-result', `Message: ${data.message}`, 'info');
+                    
+                    if (data.data) {
+                        log('completion-result', `Students processed: ${data.data.studentsProcessed}`, 'info');
+                        log('completion-result', `Completed: ${data.data.completedCount}, Failed: ${data.data.failedCount}`, 'info');
+                        log('completion-result', `Eligible for next: ${data.data.eligibleForNext}`, 'info');
+                        if (data.data.nextTermNumber) {
+                            log('completion-result', `Next term: ${data.data.nextTermNumber}`, 'info');
+                        }
+                    }
+                    
+                    // Refresh batches data
+                    setTimeout(() => {
+                        getAllBatches();
+                    }, 1000);
+                } else {
+                    log('completion-result', `Failed to complete term: ${data.message}`, 'error');
+                    if (data.error) {
+                        log('completion-result', `Error details: ${data.error}`, 'warning');
+                    }
+                }
+            } catch (error) {
+                log('completion-result', `Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

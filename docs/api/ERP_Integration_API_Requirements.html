@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ERP Integration API Requirements</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+        }
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            font-size: 28px;
+        }
+        h2 {
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+            font-size: 24px;
+        }
+        h3 {
+            font-size: 20px;
+        }
+        h4 {
+            font-size: 18px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            font-size: 13px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        ul, ol {
+            padding-left: 30px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #2c3e50;
+        }
+        .endpoint {
+            background-color: #e8f4fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        @media print {
+            body {
+                margin: 20px;
+            }
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+            }
+            pre {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+<h1>ERP Integration API Requirements for PEP Score Nexus</h1><br>
+
+<h2>Overview</h2><br>
+<br>
+This document outlines the simplified API requirements for integrating the college's ERP system with the PEP Score Nexus application. The PEP Score Nexus is a program-specific assessment application that requires minimal essential data from the ERP system.<br>
+
+<h2>Integration Scope</h2><br>
+<br>
+The PEP Score Nexus application needs the following essential data from the ERP system:
+<ul>
+<li><strong>Student Basic Details</strong>: Core student information for PEP program participants</li>
+<li><strong>Teacher Basic Details</strong>: Essential teacher information for PEP assessments</li>
+<li><strong>Overall Attendance</strong>: Student's overall attendance percentage per term</li>
+<li><strong>Academic Structure</strong>: Basic batch, section, and term information</li>
+</ul><br>
+
+<strong>Note</strong>: PEP Score Nexus uses SSO (Single Sign-On) integration with ERP and Microsoft, so no password/credential management is required.<br>
+
+<h2>Base URL and Authentication</h2><br>
+
+<strong>ERP System Base URL</strong>: <code>https://erp.college.edu/api/v1</code><br>
+
+<strong>Authentication</strong>:
+<ul>
+<li>API Key based authentication</li>
+<li>Include API key in header: <code>X-API-Key: <your-api-key></code></li>
+<li>All requests must be made over HTTPS</li>
+</ul><br>
+
+<h2>Required API Endpoints</h2><br>
+
+<h3>1. Student Management APIs</h3><br>
+
+<h4>1.1 Get All Students</h4>
+<strong>Endpoint</strong>: <code>GET /students</code><br>
+
+<strong>Query Parameters</strong>:
+<ul>
+<li><code>batch</code> (optional): Filter by batch year (e.g., "2024")</li>
+<li><code>course</code> (optional): Filter by course (e.g., "PGDM", "MBA")</li>
+<li><code>status</code> (optional): Filter by status ("active", "inactive")</li>
+<li><code>page</code> (optional): Page number for pagination (default: 1)</li>
+<li><code>limit</code> (optional): Items per page (default: 100, max: 500)</li>
+</ul><br>
+
+<strong>Required Response</strong>:
+<pre><code class="json">{<br>
+  "success": true,<br>
+  "data": {<br>
+    "students": [<br>
+      {<br>
+        "id": "string",<br>
+        "registration_no": "string",<br>
+        "name": "string",<br>
+        "email": "string",<br>
+        "course": "string",<br>
+        "batch": "string",<br>
+        "section": "string",<br>
+        "gender": "Male|Female|Other",<br>
+        "status": "active|inactive",<br>
+        "current_term": "string",<br>
+        "created_at": "ISO 8601 timestamp",<br>
+        "updated_at": "ISO 8601 timestamp"<br>
+      }<br>
+    ],<br>
+    "pagination": {<br>
+      "current_page": 1,<br>
+      "total_pages": 10,<br>
+      "total_items": 1000,<br>
+      "items_per_page": 100<br>
+    }<br>
+  },<br>
+  "timestamp": "ISO 8601 timestamp"<br>
+}</code></pre><br>
+
+<h4>1.2 Get Student by ID</h4>
+<strong>Endpoint</strong>: <code>GET /students/{student_id}</code><br>
+
+<strong>Required Response</strong>:
+<pre><code class="json">{<br>
+  "success": true,<br>
+  "data": {<br>
+    "student": {<br>
+      "id": "string",<br>
+      "registration_no": "string",<br>
+      "name": "string",<br>
+      "email": "string",<br>
+      "course": "string",<br>
+      "batch": "string",<br>
+      "section": "string",<br>
+      "gender": "Male|Female|Other",<br>
+      "status": "active|inactive",<br>
+      "current_term": "string",<br>
+      "created_at": "ISO 8601 timestamp",<br>
+      "updated_at": "ISO 8601 timestamp"<br>
+    }<br>
+  },<br>
+  "timestamp": "ISO 8601 timestamp"<br>
+}</code></pre><br>
+
+<h3>2. Teacher Management APIs</h3><br>
+
+<h4>2.1 Get All Teachers</h4>
+<strong>Endpoint</strong>: <code>GET /teachers</code><br>
+
+<strong>Query Parameters</strong>:
+<ul>
+<li><code>department</code> (optional): Filter by department</li>
+<li><code>status</code> (optional): Filter by status ("active", "inactive")</li>
+<li><code>page</code> (optional): Page number for pagination</li>
+<li><code>limit</code> (optional): Items per page</li>
+</ul><br>
+
+<strong>Required Response</strong>:
+<pre><code class="json">{<br>
+  "success": true,<br>
+  "data": {<br>
+    "teachers": [<br>
+      {<br>
+        "id": "string",<br>
+        "employee_id": "string",<br>
+        "name": "string",<br>
+        "email": "string",<br>
+        "department": "string",<br>
+        "specialization": "string",<br>
+        "status": "active|inactive",<br>
+        "created_at": "ISO 8601 timestamp",<br>
+        "updated_at": "ISO 8601 timestamp"<br>
+      }<br>
+    ],<br>
+    "pagination": {<br>
+      "current_page": 1,<br>
+      "total_pages": 5,<br>
+      "total_items": 50,<br>
+      "items_per_page": 10<br>
+    }<br>
+  },<br>
+  "timestamp": "ISO 8601 timestamp"<br>
+}</code></pre><br>
+
+<h4>2.2 Get Teacher by ID</h4>
+<strong>Endpoint</strong>: <code>GET /teachers/{teacher_id}</code><br>
+
+<strong>Required Response</strong>:
+<pre><code class="json">{<br>
+  "success": true,<br>
+  "data": {<br>
+    "teacher": {<br>
+      "id": "string",<br>
+      "employee_id": "string",<br>
+      "name": "string",<br>
+      "email": "string",<br>
+      "department": "string",<br>
+      "specialization": "string",<br>
+      "status": "active|inactive",<br>
+      "created_at": "ISO 8601 timestamp",<br>
+      "updated_at": "ISO 8601 timestamp"<br>
+    }<br>
+  },<br>
+  "timestamp": "ISO 8601 timestamp"<br>
+}</code></pre><br>
+
+<h3>3. Attendance Management APIs</h3><br>
+
+<h4>3.1 Get Student Overall Attendance</h4>
+<strong>Endpoint</strong>: <code>GET /students/{student_id}/attendance/summary</code><br>
+
+<strong>Query Parameters</strong>:
+<ul>
+<li><code>term</code> (optional): Filter by specific term (if not provided, returns current term)</li>
+<li><code>academic_year</code> (optional): Filter by academic year</li>
+</ul><br>
+
+<strong>Required Response</strong>:
+<pre><code class="json">{<br>
+  "success": true,<br>
+  "data": {<br>
+    "student": {<br>
+      "id": "string",<br>
+      "registration_no": "string",<br>
+      "name": "string",<br>
+      "batch": "string",<br>
+      "section": "string"<br>
+    },<br>
+    "current_term": {<br>
+      "term": "string",<br>
+      "academic_year": "string",<br>
+      "overall_attendance_percentage": "number",<br>
+      "total_classes_held": "number",<br>
+      "total_classes_attended": "number",<br>
+      "status": "satisfactory|shortage|critical"<br>
+    },<br>
+    "previous_terms": [<br>
+      {<br>
+        "term": "string",<br>
+        "academic_year": "string",<br>
+        "overall_attendance_percentage": "number"<br>
+      }<br>
+    ]<br>
+  },<br>
+  "timestamp": "ISO 8601 timestamp"<br>
+}</code></pre><br>
+
+<h3>4. Academic Structure APIs</h3><br>
+
+<h4>4.1 Get Academic Terms</h4>
+<strong>Endpoint</strong>: <code>GET /academic/terms</code><br>
+
+<strong>Query Parameters</strong>:
+<ul>
+<li><code>academic_year</code> (optional): Filter by academic year</li>
+<li><code>is_current</code> (optional): Boolean to get only current term</li>
+</ul><br>
+
+<strong>Required Response</strong>:
+<pre><code class="json">{<br>
+  "success": true,<br>
+  "data": {<br>
+    "terms": [<br>
+      {<br>
+        "id": "string",<br>
+        "name": "string",<br>
+        "academic_year": "string",<br>
+        "start_date": "YYYY-MM-DD",<br>
+        "end_date": "YYYY-MM-DD",<br>
+        "is_current": "boolean"<br>
+      }<br>
+    ]<br>
+  },<br>
+  "timestamp": "ISO 8601 timestamp"<br>
+}</code></pre><br>
+
+<h4>4.2 Get Batches and Sections</h4>
+<strong>Endpoint</strong>: <code>GET /academic/structure</code><br>
+
+<strong>Required Response</strong>:
+<pre><code class="json">{<br>
+  "success": true,<br>
+  "data": {<br>
+    "batches": [<br>
+      {<br>
+        "id": "string",<br>
+        "name": "string",<br>
+        "year": "number",<br>
+        "program": "string",<br>
+        "is_active": "boolean",<br>
+        "sections": [<br>
+          {<br>
+            "id": "string",<br>
+            "name": "string",<br>
+            "capacity": "number",<br>
+            "current_strength": "number"<br>
+          }<br>
+        ]<br>
+      }<br>
+    ]<br>
+  },<br>
+  "timestamp": "ISO 8601 timestamp"<br>
+}</code></pre><br>
+
+<h3>5. Bulk Data APIs</h3><br>
+
+<h4>5.1 Bulk Student Data Export</h4>
+<strong>Endpoint</strong>: <code>GET /bulk/students</code><br>
+
+<strong>Query Parameters</strong>:
+<ul>
+<li><code>batch</code> (optional): Filter by batch</li>
+<li><code>include_attendance</code> (optional): Boolean to include attendance summary</li>
+</ul><br>
+
+<strong>Required Response</strong>:
+<pre><code class="json">{<br>
+  "success": true,<br>
+  "data": {<br>
+    "export_info": {<br>
+      "total_records": "number",<br>
+      "generated_at": "ISO 8601 timestamp"<br>
+    },<br>
+    "students": [<br>
+      {<br>
+        "id": "string",<br>
+        "registration_no": "string",<br>
+        "name": "string",<br>
+        "email": "string",<br>
+        "course": "string",<br>
+        "batch": "string",<br>
+        "section": "string",<br>
+        "gender": "string",<br>
+        "status": "string",<br>
+        "attendance_summary": {<br>
+          "current_term_percentage": "number",<br>
+          "previous_term_percentage": "number"<br>
+        }<br>
+      }<br>
+    ]<br>
+  },<br>
+  "timestamp": "ISO 8601 timestamp"<br>
+}</code></pre><br>
+
+<h2>Error Handling</h2><br>
+
+<h3>Standard Error Response Format</h3><br>
+All API endpoints should follow this error response format:<br>
+
+<pre><code class="json">{<br>
+  "success": false,<br>
+  "error": {<br>
+    "code": "ERROR_CODE",<br>
+    "message": "Human readable error message",<br>
+    "details": "Additional error details if available"<br>
+  },<br>
+  "timestamp": "ISO 8601 timestamp"<br>
+}</code></pre><br>
+
+<h3>Common Error Codes</h3><br>
+| HTTP Status | Error Code | Description |<br>
+|-------------|------------|-------------|<br>
+| 400 | <code>INVALID_REQUEST</code> | Invalid request parameters |<br>
+| 401 | <code>UNAUTHORIZED</code> | Invalid or missing API key |<br>
+| 403 | <code>FORBIDDEN</code> | Insufficient permissions |<br>
+| 404 | <code>NOT_FOUND</code> | Resource not found |<br>
+| 429 | <code>RATE_LIMIT_EXCEEDED</code> | Too many requests |<br>
+| 500 | <code>INTERNAL_ERROR</code> | Server error |<br>
+| 503 | <code>SERVICE_UNAVAILABLE</code> | Service temporarily unavailable |<br>
+
+<h2>Rate Limiting</h2><br>
+
+<ul>
+<li><strong>Rate Limit</strong>: 1000 requests per hour per API key</li>
+<li><strong>Burst Limit</strong>: 100 requests per minute</li>
+<li><strong>Headers</strong>: Include rate limit information in response headers</li>
+<li><code>X-RateLimit-Limit</code>: Total requests allowed per hour</li>
+<li><code>X-RateLimit-Remaining</code>: Remaining requests in current window</li>
+<li><code>X-RateLimit-Reset</code>: Time when rate limit resets (Unix timestamp)</li>
+</ul><br>
+
+<h2>Data Synchronization Requirements</h2><br>
+
+<h3>Daily Synchronization</h3><br>
+The following data should be synchronized daily:
+<ul>
+<li>Student profile updates</li>
+<li>Teacher profile updates</li>
+<li>Overall attendance percentage updates</li>
+<li>Student status changes (active/inactive)</li>
+</ul><br>
+
+<h3>Weekly Synchronization</h3><br>
+The following data can be synchronized weekly:
+<ul>
+<li>Academic structure updates (batches, sections)</li>
+<li>Term information updates</li>
+</ul><br>
+
+<h3>Initial Setup</h3>
+<ul>
+<li>Bulk import of all student and teacher data</li>
+<li>Academic structure setup (batches, sections, terms)</li>
+</ul><br>
+
+<h2>Security Requirements</h2><br>
+<br>
+1. <strong>HTTPS Only</strong>: All API communications must use HTTPS<br>
+2. <strong>API Key Authentication</strong>: Secure API key management<br>
+3. <strong>IP Whitelisting</strong>: Restrict API access to specific IP addresses<br>
+4. <strong>Data Privacy</strong>: Comply with data protection regulations<br>
+<br>
+
+<h2>PEP Score Nexus Integration Points</h2><br>
+
+<h3>How These APIs Will Be Used</h3><br>
+
+<h4>Student Data Integration</h4>
+<ul>
+<li><strong>Initial Setup</strong>: Bulk import of all student data using <code>/bulk/students</code></li>
+<li><strong>Daily Sync</strong>: Update student profiles and status changes</li>
+<li><strong>SSO Integration</strong>: Validate student identity through ERP system</li>
+</ul><br>
+
+<h4>Teacher Data Integration</h4>
+<ul>
+<li><strong>Initial Setup</strong>: Import all teacher data using <code>/teachers</code></li>
+<li><strong>Daily Sync</strong>: Update teacher profiles and status</li>
+<li><strong>SSO Integration</strong>: Validate teacher identity through ERP system</li>
+</ul><br>
+
+<h4>Attendance Integration</h4>
+<ul>
+<li><strong>Core Requirement</strong>: Overall attendance percentage for PEP eligibility calculations</li>
+<li><strong>Data Flow</strong>: ERP attendance → PEP eligibility calculation → Quadrant scoring</li>
+<li><strong>Frequency</strong>: Daily synchronization of attendance summaries</li>
+</ul><br>
+
+<h4>Academic Structure Integration</h4>
+<ul>
+<li><strong>Purpose</strong>: Maintain consistent batch, section, and term information</li>
+<li><strong>Usage</strong>: Ensure PEP assessments align with academic structure</li>
+<li><strong>Sync</strong>: Weekly updates of academic structure</li>
+</ul><br>
+
+<h3>PEP System API Endpoints That Will Consume ERP Data</h3><br>
+<br>
+Based on our existing PEP Score Nexus API structure, the following endpoints will integrate with ERP data:<br>
+
+<h4>Student Management</h4>
+<ul>
+<li><code>POST /api/v1/admin/students/sync-from-erp</code> - Sync student data from ERP</li>
+<li><code>PUT /api/v1/students/{studentId}/attendance</code> - Update attendance from ERP</li>
+<li><code>GET /api/v1/students/{studentId}/eligibility</code> - Calculate eligibility using ERP attendance</li>
+</ul><br>
+
+<h4>SSO Authentication Integration</h4>
+<ul>
+<li><code>POST /api/v1/auth/sso-validate</code> - Validate SSO token with ERP system</li>
+<li><code>GET /api/v1/auth/user-exists</code> - Check if user exists in PEP system</li>
+</ul><br>
+
+<h4>Data Synchronization</h4>
+<ul>
+<li><code>POST /api/v1/admin/sync/students</code> - Trigger student data sync</li>
+<li><code>POST /api/v1/admin/sync/teachers</code> - Trigger teacher data sync</li>
+<li><code>POST /api/v1/admin/sync/attendance</code> - Trigger attendance sync</li>
+<li><code>GET /api/v1/admin/sync/status</code> - Check synchronization status</li>
+</ul><br>
+
+<h2>Sample Integration Workflow</h2><br>
+
+<h3>1. Initial Data Setup</h3>
+<pre><code>1. Call ERP /bulk/students → Import all student data to PEP system<br>
+2. Call ERP /teachers → Import all teacher data to PEP system<br>
+3. Call ERP /academic/structure → Setup batches, sections in PEP system<br>
+4. Call ERP /academic/terms → Setup terms information</code></pre><br>
+
+<h3>2. Daily Synchronization</h3>
+<pre><code>1. Call ERP /students → Sync student profile changes<br>
+2. Call ERP /students/{id}/attendance/summary → Update attendance for eligibility<br>
+3. Call ERP /teachers → Sync teacher profile changes<br>
+4. Update PEP system eligibility calculations based on new attendance data</code></pre><br>
+
+<h3>3. SSO Authentication Flow</h3>
+<pre><code>1. User logs in through ERP/Microsoft SSO<br>
+2. PEP system receives SSO token<br>
+3. Call ERP API to validate token and get user details<br>
+4. Check if user exists in PEP system database<br>
+5. Grant access to PEP application</code></pre><br>
+
+<h2>Conclusion</h2><br>
+<br>
+This simplified API specification provides the essential integration requirements between the college ERP system and PEP Score Nexus application. The APIs will enable:<br>
+
+<ul>
+<li><strong>Essential student and teacher data</strong> synchronization for PEP program participants</li>
+<li><strong>Overall attendance tracking</strong> for PEP eligibility calculations</li>
+<li><strong>SSO integration</strong> eliminating the need for separate password management</li>
+<li><strong>Streamlined data management</strong> with minimal but sufficient data exchange</li>
+<li><strong>Academic structure alignment</strong> ensuring consistency between systems</li>
+</ul><br>
+<br>
+The integration focuses on core requirements for the PEP assessment system while maintaining simplicity and avoiding unnecessary data complexity. This approach ensures efficient data synchronization and seamless user experience through SSO authentication.<br>
+
+</body>
+</html>

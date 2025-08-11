@@ -1,0 +1,26 @@
+graph TD
+    A[Login Page] -->|Enter Student Credentials| B[Authentication]
+    B -->|Success| C[Student Dashboard]
+    B -->|Failure| A
+    
+    C -->|View Quadrant Details| D[Quadrant Detail Page]
+    C -->|Check Eligibility| E[Eligibility Page]
+    C -->|View Improvement Plan| F[Improvement Plan]
+    C -->|Provide Feedback| G[Feedback Page]
+    C -->|Adjust Settings| H[Settings Page]
+    
+    D -->|Back| C
+    E -->|Back| C
+    F -->|Back| C
+    G -->|Submit Feedback| G1[Feedback Submitted]
+    G1 -->|Back| C
+    H -->|Save Settings| H1[Settings Saved]
+    H1 -->|Back| C
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style C fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#dfd,stroke:#333,stroke-width:2px
+    style E fill:#dfd,stroke:#333,stroke-width:2px
+    style F fill:#dfd,stroke:#333,stroke-width:2px
+    style G fill:#dfd,stroke:#333,stroke-width:2px
+    style H fill:#dfd,stroke:#333,stroke-width:2px

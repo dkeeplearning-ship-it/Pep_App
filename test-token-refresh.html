@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Refresh Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Token Refresh Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Login</h2>
+        <button onclick="testLogin()">Login as Admin</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test API Call</h2>
+        <button onclick="testAPICall()">Test Dashboard API</button>
+        <div id="api-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Token Refresh</h2>
+        <button onclick="testTokenRefresh()">Test Token Refresh</button>
+        <div id="refresh-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Simulate Expired Token</h2>
+        <button onclick="simulateExpiredToken()">Set Expired Token</button>
+        <button onclick="testAPICallWithExpiredToken()">Test API with Expired Token</button>
+        <div id="expired-result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001/api/v1';
+        
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+        }
+        
+        async function testLogin() {
+            try {
+                log('login-result', 'Attempting login...', 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin1',
+                        password: 'password123'
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('authToken', data.data.token);
+                    localStorage.setItem('refreshToken', data.data.refreshToken);
+                    localStorage.setItem('userData', JSON.stringify(data.data.user));
+                    
+                    log('login-result', 'Login successful!', 'success');
+                    log('login-result', `Token: ${data.data.token.substring(0, 50)}...`, 'info');
+                    log('login-result', `Refresh Token: ${data.data.refreshToken.substring(0, 50)}...`, 'info');
+                } else {
+                    log('login-result', `Login failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log('login-result', `Login error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAPICall() {
+            try {
+                log('api-result', 'Testing API call...', 'info');
+                
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    log('api-result', 'No token found. Please login first.', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('api-result', 'API call successful!', 'success');
+                    log('api-result', `Total Students: ${data.data.counts.totalStudents}`, 'info');
+                } else {
+                    log('api-result', `API call failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log('api-result', `API error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testTokenRefresh() {
+            try {
+                log('refresh-result', 'Testing token refresh...', 'info');
+                
+                const refreshToken = localStorage.getItem('refreshToken');
+                if (!refreshToken) {
+                    log('refresh-result', 'No refresh token found. Please login first.', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        refreshToken: refreshToken
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('authToken', data.data.token);
+                    localStorage.setItem('refreshToken', data.data.refreshToken);
+                    
+                    log('refresh-result', 'Token refresh successful!', 'success');
+                    log('refresh-result', `New Token: ${data.data.token.substring(0, 50)}...`, 'info');
+                } else {
+                    log('refresh-result', `Token refresh failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log('refresh-result', `Refresh error: ${error.message}`, 'error');
+            }
+        }
+        
+        function simulateExpiredToken() {
+            // Set an obviously expired token
+            const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0Iiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNjAwMDAwMDAwLCJleHAiOjE2MDAwMDAwMDB9.invalid';
+            localStorage.setItem('authToken', expiredToken);
+            log('expired-result', 'Set expired token for testing', 'info');
+        }
+        
+        async function testAPICallWithExpiredToken() {
+            try {
+                log('expired-result', 'Testing API call with expired token...', 'info');
+                
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    log('expired-result', 'Token expired as expected. Testing automatic refresh...', 'info');
+                    
+                    // Now test if our refresh logic would work
+                    await testTokenRefresh();
+                } else {
+                    log('expired-result', `Unexpected response: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log('expired-result', `Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

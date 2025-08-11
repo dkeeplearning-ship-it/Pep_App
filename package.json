@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@azure/msal-browser": "^4.15.0",
+    "@azure/msal-node": "^3.6.3",
+    "@azure/msal-react": "^3.0.15",
+    "axios": "^1.10.0",
+    "dotenv": "^17.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "passport-jwt": "^4.0.1"
+  }
+}
