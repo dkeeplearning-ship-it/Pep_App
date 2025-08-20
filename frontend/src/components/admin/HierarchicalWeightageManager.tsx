@@ -53,6 +53,15 @@ const HierarchicalWeightageManager: React.FC<HierarchicalWeightageManagerProps> 
   const [editingWeightage, setEditingWeightage] = useState<string | null>(null);
   const [tempWeightage, setTempWeightage] = useState<number>(0);
 
+  // Group edit mode: edit all peer weightages that must sum to 100%
+  const [groupEdit, setGroupEdit] = useState<{
+    level: 'quadrant' | 'subcategory' | 'component' | 'microcompetency' | null;
+    parentId?: string;
+  }>({ level: null });
+  const [groupWeights, setGroupWeights] = useState<Record<string, number>>({});
+  const [groupItems, setGroupItems] = useState<Array<{ id: string; name: string }>>([]);
+  const groupTotal = Object.values(groupWeights).reduce((sum, w) => sum + (Number.isFinite(w) ? w : 0), 0);
+
   // Add/Remove dialog states
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [addDialogType, setAddDialogType] = useState<'quadrant' | 'subcategory' | 'component' | 'microcompetency'>('quadrant');
@@ -136,6 +145,124 @@ const HierarchicalWeightageManager: React.FC<HierarchicalWeightageManagerProps> 
   const startEditingWeightage = (itemId: string, currentWeightage: number) => {
     setEditingWeightage(itemId);
     setTempWeightage(currentWeightage);
+  };
+
+  const enterGroupEdit = (
+    level: 'quadrant' | 'subcategory' | 'component' | 'microcompetency',
+    parentId?: string
+  ) => {
+    let items: Array<{ id: string; name: string; weight: number }> = [];
+    switch (level) {
+      case 'quadrant':
+        items = quadrantWeightages.map(q => ({
+          id: q.quadrant_id,
+          name: q.quadrants?.name || q.quadrant_id,
+          weight: q.weightage || 0
+        }));
+        break;
+      case 'subcategory':
+        items = subcategoryWeightages
+          .filter(s => s.sub_categories?.quadrant_id === parentId)
+          .map(s => ({
+            id: s.subcategory_id,
+            name: s.sub_categories?.name || s.subcategory_id,
+            weight: s.weightage || 0
+          }));
+        break;
+      case 'component':
+        items = componentWeightages
+          .filter(c => c.components?.sub_category_id === parentId)
+          .map(c => ({
+            id: c.component_id,
+            name: c.components?.name || c.component_id,
+            weight: c.weightage || 0
+          }));
+        break;
+      case 'microcompetency':
+        items = microcompetencyWeightages
+          .filter(m => m.microcompetencies?.component_id === parentId)
+          .map(m => ({
+            id: m.microcompetency_id,
+            name: m.microcompetencies?.name || m.microcompetency_id,
+            weight: m.weightage || 0
+          }));
+        break;
+    }
+
+    setGroupEdit({ level, parentId });
+    setGroupItems(items.map(i => ({ id: i.id, name: i.name })));
+    setGroupWeights(Object.fromEntries(items.map(i => [i.id, i.weight])));
+    setEditingWeightage(null);
+  };
+
+  const cancelGroupEdit = () => {
+    setGroupEdit({ level: null });
+    setGroupItems([]);
+    setGroupWeights({});
+  };
+
+  const saveGroupEdit = async () => {
+    if (!groupEdit.level) return;
+    setSaving(true);
+    try {
+      if (Math.round(groupTotal) !== 100) {
+        toast.error(`Total weightage must equal 100%. Current total: ${groupTotal}%`);
+        setSaving(false);
+        return;
+      }
+      switch (groupEdit.level) {
+        case 'quadrant': {
+          const updated = quadrantWeightages.map(q => ({
+            ...q,
+            weightage: Number(groupWeights[q.quadrant_id] ?? q.weightage)
+          }));
+          await batchTermWeightageService.updateConfiguration(selectedConfig.id, {
+            quadrant_weightages: updated
+          });
+          setQuadrantWeightages(updated);
+          break;
+        }
+        case 'subcategory': {
+          const updated = subcategoryWeightages.map(s =>
+            s.sub_categories?.quadrant_id === groupEdit.parentId
+              ? { ...s, weightage: Number(groupWeights[s.subcategory_id] ?? s.weightage) }
+              : s
+          );
+          await batchTermWeightageService.updateSubcategoryWeightages(selectedConfig.id, updated);
+          setSubcategoryWeightages(updated);
+          break;
+        }
+        case 'component': {
+          const updated = componentWeightages.map(c =>
+            c.components?.sub_category_id === groupEdit.parentId
+              ? { ...c, weightage: Number(groupWeights[c.component_id] ?? c.weightage) }
+              : c
+          );
+          await batchTermWeightageService.updateComponentWeightages(selectedConfig.id, updated);
+          setComponentWeightages(updated);
+          break;
+        }
+        case 'microcompetency': {
+          const updated = microcompetencyWeightages.map(m =>
+            m.microcompetencies?.component_id === groupEdit.parentId
+              ? { ...m, weightage: Number(groupWeights[m.microcompetency_id] ?? m.weightage) }
+              : m
+          );
+          await batchTermWeightageService.updateMicrocompetencyWeightages(selectedConfig.id, updated);
+          setMicrocompetencyWeightages(updated);
+          break;
+        }
+      }
+
+      toast.success('Weightages saved successfully');
+      cancelGroupEdit();
+      if (onConfigUpdate) onConfigUpdate();
+    } catch (error) {
+      console.error('Error saving group weightages:', error);
+      toast.error(`Failed to save weightages: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const saveWeightage = async (itemId: string, level: 'quadrant' | 'subcategory' | 'component' | 'microcompetency') => {
@@ -308,7 +435,12 @@ const HierarchicalWeightageManager: React.FC<HierarchicalWeightageManagerProps> 
     return 'text-green-600';
   };
 
-  const renderWeightageInput = (itemId: string, currentWeightage: number, level: string) => {
+  const renderWeightageInput = (
+    itemId: string,
+    currentWeightage: number,
+    level: string,
+    onEdit?: () => void
+  ) => {
     if (editingWeightage === itemId) {
       return (
         <div className="flex items-center gap-2 bg-white rounded-lg border border-blue-200 p-2">
@@ -355,7 +487,7 @@ const HierarchicalWeightageManager: React.FC<HierarchicalWeightageManagerProps> 
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => startEditingWeightage(itemId, currentWeightage)}
+          onClick={() => (onEdit ? onEdit() : startEditingWeightage(itemId, currentWeightage))}
           className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
         >
           <Edit className="h-3 w-3" />
@@ -406,7 +538,12 @@ const HierarchicalWeightageManager: React.FC<HierarchicalWeightageManagerProps> 
           </div>
 
           <div className="flex items-center gap-4">
-            {renderWeightageInput(quadrant.quadrant_id, quadrant.weightage, 'quadrant')}
+            {renderWeightageInput(
+              quadrant.quadrant_id,
+              quadrant.weightage,
+              'quadrant',
+              () => enterGroupEdit('quadrant')
+            )}
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
@@ -495,7 +632,12 @@ const HierarchicalWeightageManager: React.FC<HierarchicalWeightageManagerProps> 
           </div>
 
           <div className="flex items-center gap-2">
-            {renderWeightageInput(subcategory.subcategory_id, subcategory.weightage, 'subcategory')}
+            {renderWeightageInput(
+              subcategory.subcategory_id,
+              subcategory.weightage,
+              'subcategory',
+              () => enterGroupEdit('subcategory', subcategory.sub_categories?.quadrant_id)
+            )}
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
@@ -581,7 +723,12 @@ const HierarchicalWeightageManager: React.FC<HierarchicalWeightageManagerProps> 
           </div>
 
           <div className="flex items-center gap-2">
-            {renderWeightageInput(component.component_id, component.weightage, 'component')}
+            {renderWeightageInput(
+              component.component_id,
+              component.weightage,
+              'component',
+              () => enterGroupEdit('component', component.components?.sub_category_id)
+            )}
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
@@ -650,7 +797,12 @@ const HierarchicalWeightageManager: React.FC<HierarchicalWeightageManagerProps> 
           </div>
 
           <div className="flex items-center gap-2">
-            {renderWeightageInput(microcompetency.microcompetency_id, microcompetency.weightage, 'microcompetency')}
+            {renderWeightageInput(
+              microcompetency.microcompetency_id,
+              microcompetency.weightage,
+              'microcompetency',
+              () => enterGroupEdit('microcompetency', microcompetency.microcompetencies?.component_id)
+            )}
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
@@ -790,6 +942,49 @@ const HierarchicalWeightageManager: React.FC<HierarchicalWeightageManagerProps> 
 
       {/* PEP Hierarchy */}
       <div className="bg-white rounded-lg border border-gray-200">
+        {groupEdit.level && (
+          <div className="border-b border-gray-200 p-4 bg-blue-50">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-blue-800">
+                  Group edit: {groupEdit.level.charAt(0).toUpperCase() + groupEdit.level.slice(1)}
+                </h3>
+                <p className={`text-sm ${Math.round(groupTotal) === 100 ? 'text-green-700' : 'text-red-700'}`}>
+                  Total: {groupTotal}% {Math.round(groupTotal) === 100 ? '(OK)' : '(Must equal 100%)'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={cancelGroupEdit} className="border-blue-300">
+                  Cancel
+                </Button>
+                <Button onClick={saveGroupEdit} disabled={saving} className="bg-green-600 hover:bg-green-700">
+                  {saving ? 'Saving...' : 'Save All'}
+                </Button>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              {groupItems.map(item => (
+                <div key={item.id} className="flex items-center justify-between bg-white border border-blue-200 rounded-md p-2">
+                  <div className="text-sm font-medium text-gray-700 mr-2 truncate" title={item.name}>{item.name}</div>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      className="w-24 h-8 text-sm"
+                      value={groupWeights[item.id] ?? 0}
+                      onChange={(e) =>
+                        setGroupWeights(prev => ({ ...prev, [item.id]: parseFloat(e.target.value) || 0 }))
+                      }
+                    />
+                    <span className="text-xs text-gray-500">%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="border-b border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900">PEP Hierarchy</h2>
           <p className="text-gray-600 mt-1">
