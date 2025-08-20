@@ -53,6 +53,7 @@ interface ProfileRequest {
     email: string;
   };
 }
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 const ProfileApproval: React.FC = () => {
   const { token } = useAuth();
@@ -84,7 +85,7 @@ const ProfileApproval: React.FC = () => {
         queryParams.append('status', statusFilter);
       }
 
-      const response = await fetch(`http://localhost:3001/api/v1/student/profile/admin/requests?${queryParams}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/student/profile/admin/requests?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`
         }
@@ -112,7 +113,7 @@ const ProfileApproval: React.FC = () => {
 
     try {
       setReviewLoading(true);
-      const response = await fetch(`http://localhost:3001/api/v1/student/profile/admin/requests/${selectedRequest.id}/review`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/student/profile/admin/requests/${selectedRequest.id}/review`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

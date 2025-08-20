@@ -46,6 +46,7 @@ interface ProfileRequest {
     email: string;
   };
 }
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 const ProfileUpdate: React.FC = () => {
   const { token } = useAuth();
@@ -79,7 +80,7 @@ const ProfileUpdate: React.FC = () => {
 
   const loadReferenceData = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/v1/student/profile/reference-data', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/student/profile/reference-data`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`
         }
@@ -100,7 +101,7 @@ const ProfileUpdate: React.FC = () => {
   const loadProfileRequests = async () => {
     try {
       setRequestsLoading(true);
-      const response = await fetch('http://localhost:3001/api/v1/student/profile/requests', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/student/profile/requests`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`
         }
@@ -154,7 +155,7 @@ const ProfileUpdate: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/v1/student/profile/update-request', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/student/profile/update-request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

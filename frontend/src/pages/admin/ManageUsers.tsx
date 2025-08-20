@@ -54,6 +54,7 @@ interface UserStats {
   };
   recentUsers: User[];
 }
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 const ManageUsers: React.FC = () => {
   const { token } = useAuth();
@@ -88,7 +89,7 @@ const ManageUsers: React.FC = () => {
       if (roleFilter && roleFilter !== 'all') queryParams.append('role', roleFilter);
       if (statusFilter && statusFilter !== 'all') queryParams.append('status', statusFilter);
 
-             const response = await fetch(`http://localhost:3001/api/v1/users?${queryParams}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/users?${queryParams}`, {
          headers: {
            'Authorization': `Bearer ${getAuthToken()}`
          }
@@ -109,7 +110,7 @@ const ManageUsers: React.FC = () => {
 
   const loadStats = async () => {
     try {
-             const response = await fetch('http://localhost:3001/api/v1/users/stats', {
+             const response = await fetch('${API_BASE_URL}/api/v1/users/stats', {
          headers: {
            'Authorization': `Bearer ${getAuthToken()}`
          }
@@ -131,7 +132,7 @@ const ManageUsers: React.FC = () => {
 
   const handleStatusChange = async (userId: string, newStatus: string) => {
     try {
-             const response = await fetch(`http://localhost:3001/api/v1/users/${userId}/status`, {
+             const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}/status`, {
          method: 'PATCH',
          headers: {
            'Content-Type': 'application/json',

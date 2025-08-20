@@ -105,6 +105,7 @@ interface StudentDetailsData {
     overall_average_score: number;
   };
 }
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 const TeacherStudents: React.FC = () => {
   const navigate = useNavigate();
@@ -193,7 +194,7 @@ const TeacherStudents: React.FC = () => {
       let detailedData: StudentDetailsData | null = null;
       
       try {
-        const response = await fetch(`http://localhost:3001/api/v1/teachers/${user.id}/students/${student.id}/assessment?termId=${selectedTerm?.id || ''}`, {
+        const response = await fetch(`${API_BASE_URL}/api/v1/teachers/${user.id}/students/${student.id}/assessment?termId=${selectedTerm?.id || ''}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
             'Content-Type': 'application/json'

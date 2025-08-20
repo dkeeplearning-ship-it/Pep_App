@@ -59,7 +59,7 @@ interface RoleChangeHistory {
     email: string;
   };
 }
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 const UserRoleManagement: React.FC = () => {
   const { token } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
@@ -108,7 +108,7 @@ const UserRoleManagement: React.FC = () => {
       if (roleFilter && roleFilter !== 'all') queryParams.append('role', roleFilter);
       if (sourceFilter && sourceFilter !== 'all') queryParams.append('user_source', sourceFilter);
 
-      const response = await fetch(`http://localhost:3001/api/v1/admin/user-management/users?${queryParams}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/user-management/users?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`
         }
@@ -142,7 +142,7 @@ const UserRoleManagement: React.FC = () => {
 
     try {
       setRoleChangeLoading(true);
-      const response = await fetch(`http://localhost:3001/api/v1/admin/user-management/users/${selectedUser.id}/role`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/user-management/users/${selectedUser.id}/role`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +177,7 @@ const UserRoleManagement: React.FC = () => {
   const loadRoleHistory = async (userId: string) => {
     try {
       setHistoryLoading(true);
-      const response = await fetch(`http://localhost:3001/api/v1/admin/user-management/users/${userId}/role-history`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/user-management/users/${userId}/role-history`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`
         }
@@ -205,7 +205,7 @@ const UserRoleManagement: React.FC = () => {
 
     try {
       setCreateUserLoading(true);
-      const response = await fetch(`http://localhost:3001/api/v1/admin/user-management/users`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/user-management/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -56,6 +56,7 @@ interface SystemStats {
     version: string;
   };
 }
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 const AdminAuditLog: React.FC = () => {
   const { token } = useAuth();
@@ -79,7 +80,7 @@ const AdminAuditLog: React.FC = () => {
         queryParams.append('admin_id', adminFilter);
       }
 
-      const response = await fetch(`http://localhost:3001/api/v1/admin/user-management/audit-log?${queryParams}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/user-management/audit-log?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`
         }
@@ -102,7 +103,7 @@ const AdminAuditLog: React.FC = () => {
   const loadSystemStats = async () => {
     try {
       setStatsLoading(true);
-      const response = await fetch(`http://localhost:3001/api/v1/admin/user-management/system-stats`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/user-management/system-stats`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`
         }
